@@ -5,8 +5,7 @@
 #include <cerrno>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <system_error>
-
+#include <utility>
 
 int open_socket () {
     int sock_fd = socket (SOCK_FAM, SOCK_TYPE, PROTOCOL);
@@ -44,6 +43,7 @@ void close_socket (const int sock_fd) {
     utils::log ("Closed the socket successfully, Code = ", res);
 }
 
+// -> connection address info(ip, port)
 conn_addr_info get_conn_info (const struct sockaddr_in& addr) {
     conn_addr_info ca_info;
     char ip_str[INET_ADDRSTRLEN];
@@ -72,6 +72,7 @@ void listen_socket (const int sock_fd) {
     utils::log ("Listening on ", client_ca_info.ip, ":", client_ca_info.port);
 }
 
+// -> connection info
 conn_info accept_conn (const int sock_fd) {
     struct conn_info client_conn;
     memset (&client_conn.addr, 0, sizeof (struct sockaddr_in));
@@ -94,8 +95,56 @@ void handle_conns (const int sock_fd) {
             continue;
 
         const conn_addr_info client_ca_info = get_conn_info (client_conn_info.addr);
-        utils::log ("Connection Accepted: IP = ", client_ca_info.ip, ":", client_ca_info.port);
+        auto err_status_info                = read_req (client_conn_info, client_ca_info);
+        if (err_status_info.errored) {
+            utils::log (err_status_info.msg);
+        }
 
         close_socket (client_conn_info.fd);
     }
+}
+
+error_status_info read_req (const conn_info& client_conn_info, const conn_addr_info& ca_info) {
+    auto [read_error, request_str] = read_req_data (client_conn_info.fd);
+    if (read_error)
+        return {true, "Error reading the request"};
+
+    HttpRequest h_req;
+    auto err_info = HttpRequest::set_method_path_version_from_req (request_str, h_req);
+    if (err_info.errored)
+        return err_info;
+
+    err_info = HttpRequest::set_headers_from_req (request_str, h_req);
+    if (err_info.errored)
+        return err_info;
+
+    HttpRequest::log_request (h_req, ca_info.ip);
+    return { false, "" };
+}
+
+// -> (read_success, request_string)
+std::pair<bool, std::string> read_req_data(const int __fd) {
+    std::string request;
+    bool read_error = false;
+    char buffer [READ_CHUNK_SIZE];
+
+    while (true) {
+        ssize_t n_bytes = read (__fd, buffer, READ_CHUNK_SIZE);
+        if (n_bytes < 0) {
+            utils::log ("Request Read error: ", strerror (errno));
+            read_error = true;
+            break;
+        } else if (n_bytes == 0) {
+            utils::log ("Connection closed by client.");
+            read_error = true;
+            break;
+        }
+
+        request.append (buffer, n_bytes);
+
+        if (request.find (DOUBLE_CRLF) != std::string::npos)
+            break;
+    }
+
+    return std::make_pair (read_error, request);
 }
