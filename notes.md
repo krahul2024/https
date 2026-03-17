@@ -4,5 +4,5 @@
 - set socket options(reuse, ....)
 - bind
 - listen
-- process
+- accept and process connections
 - repeat
