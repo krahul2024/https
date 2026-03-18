@@ -1,11 +1,11 @@
-#include "./socket.h"
-#include "../utils/log.h"
-#include "../utils/error.h"
 #include <arpa/inet.h>
 #include <cerrno>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <utility>
+
+#include "./socket.h"
+#include "http.h"
+#include "../utils/log.h"
+#include "../utils/error.h"
 
 int open_socket () {
     int sock_fd = socket (SOCK_FAM, SOCK_TYPE, PROTOCOL);
@@ -123,7 +123,7 @@ error_status_info read_req (const conn_info& client_conn_info, const conn_addr_i
 }
 
 // -> (read_success, request_string)
-std::pair<bool, std::string> read_req_data(const int __fd) {
+std::pair<bool, std::string> read_req_data (const int __fd) {
     std::string request;
     bool read_error = false;
     char buffer [READ_CHUNK_SIZE];

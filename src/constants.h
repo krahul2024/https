@@ -1,0 +1,29 @@
+#pragma once
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+
+const int SOCK_FAM  = AF_INET; // ipv4
+const int SOCK_TYPE = SOCK_STREAM; // stream socket, others are datagram(UDP, ig), seq packet and raw packet
+const int PROTOCOL  = IPPROTO_TCP; // or 0, 1 for UDP, ...
+
+// Set Socket Option constraints
+const int SOCK_OPT_LVL    = SOL_SOCKET; // generic socket options
+const int SOCK_OPT_NAME   = SO_REUSEADDR;
+const int SOCK_OPT_ACTIVE = 1; //
+
+// Bind Constraints
+const int SOCK_ADD_IN_FAMILY     = AF_INET; // ipv4, ig
+const uint16_t SOCK_PORT         = 5000;
+const in_addr_t SOCK_LISTEN_ADDR = INADDR_ANY; // 0.0.0.0: all interafaces/clients, might set to localhost 127.0.0.1
+const in_addr_t HOST_ADDR        = htonl (0x7f000001); // 127.0.0.1: localhost, ig
+
+// Listen Constraints
+const int32_t BACKLOG_Q = 5;
+
+// Request Constraints
+const size_t READ_CHUNK_SIZE = 4096;
+constexpr const char* CRLF = "\r\n";
+constexpr const char* DOUBLE_CRLF = "\r\n\r\n";
+constexpr const char* SPACE = " ";
+
