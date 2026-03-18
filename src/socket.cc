@@ -39,8 +39,6 @@ void close_socket (const int sock_fd) {
     int res = close (sock_fd);
     if (res < 0)
         utils::throw_error ("Error closing the socket: ", strerror (errno));
-
-    utils::log ("Closed the socket successfully, Code = ", res);
 }
 
 // -> connection address info(ip, port)
@@ -69,7 +67,7 @@ void listen_socket (const int sock_fd) {
         utils::throw_error ("get socket name error: ", strerror (errno));
 
     const conn_addr_info client_ca_info = get_conn_info(addr);
-    utils::log ("Listening on ", client_ca_info.ip, ":", client_ca_info.port);
+    utils::log (util_colors::green, "---- Listening on ", client_ca_info.ip, ":", client_ca_info.port, " ----", util_colors::reset);
 }
 
 // -> connection info

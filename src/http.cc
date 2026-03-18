@@ -1,7 +1,7 @@
 #include "./http.h"
 
 
-error_status_info HttpRequest::set_method_path_version_from_req (std::string& req_str, HttpRequest& h) {
+error_status_info HttpRequest::parse_method_path_version_from_req (std::string& req_str, HttpRequest& h) {
     std::string line = util_methods::consume_str_till_token (req_str, CRLF);
     if (line.size() == 0)
         return {true, "invalid request body"};
@@ -20,7 +20,7 @@ error_status_info HttpRequest::set_method_path_version_from_req (std::string& re
 }
 
 // -> status, error_msg
-error_status_info HttpRequest::set_headers_from_req (std::string& req_str, HttpRequest& h) {
+error_status_info HttpRequest::parse_headers_from_req (std::string& req_str, HttpRequest& h) {
     std::string headers_str = util_methods::consume_str_till_token (req_str, DOUBLE_CRLF);
 
     if (headers_str.empty()) {
@@ -39,10 +39,27 @@ error_status_info HttpRequest::set_headers_from_req (std::string& req_str, HttpR
             return { true, "malformed header: missing key/value" };
 
         std::string value = util_methods::trim_whitespace (header_line);
-        h.headers.insert ({ key, value });
+        h.headers.insert ({ util_methods::to_lower_str(key), util_methods::to_lower_str(value) });
     }
 
     return {false, ""};
+}
+
+error_status_info HttpRequest::parse_body_from_req (HttpRequest& h) {
+    if (h.body.empty())
+        return { false, "" };
+
+    const std::string& content_type = HttpRequest::get_req_header (h, http_headers::content_type);
+    if (content_type.empty())
+        return { true, "header missing: content type" };
+
+
+    return { false, "" };
+}
+
+const std::string HttpRequest::get_req_header (HttpRequest& h, const std::string& header_str) {
+    auto it = h.headers.at (header_str);
+    return (it.empty()? "" : it);
 }
 
 void HttpRequest::log_req_line (const HttpRequest& h) {

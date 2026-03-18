@@ -9,6 +9,7 @@
 #include "../utils/log.h"
 #include "../utils/error.h"
 #include "../utils/colors.h"
+#include "./headers.h"
 
 struct METHOD {
     enum class TYPE { GET, POST, PUT, DELETE, NONE };
@@ -59,10 +60,18 @@ struct HttpRequest {
     std::string path;
     std::string query_string;
     std::map<std::string, std::string> headers;
+    std::map<std::string, std::string> __headers;
     std::string body;
 
-    static error_status_info set_method_path_version_from_req (std::string& req_str, HttpRequest& h);
-    static error_status_info set_headers_from_req (std::string& req_str, HttpRequest& h);
+    // parsing
+    static error_status_info parse_method_path_version_from_req (std::string& req_str, HttpRequest& h);
+    static error_status_info parse_headers_from_req (std::string& req_str, HttpRequest& h);
+    static error_status_info parse_body_from_req (HttpRequest& h);
+
+    // helpers
+    static const std::string get_req_header (HttpRequest& h, const std::string& header_str);
+
+    // logging
     static void log_req_line(const HttpRequest& h);
     static void log_headers (const HttpRequest& h);
     static void log_request (const HttpRequest& h, const std::string& client_ip);
