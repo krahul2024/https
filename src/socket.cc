@@ -108,15 +108,20 @@ error_status_info read_req (const conn_info& client_conn_info, const conn_addr_i
         return {true, "Error reading the request"};
 
     HttpRequest h_req;
-    auto err_info = HttpRequest::set_method_path_version_from_req (request_str, h_req);
+    auto err_info = HttpRequest::parse_method_path_version_from_req (request_str, h_req);
     if (err_info.errored)
         return err_info;
 
-    err_info = HttpRequest::set_headers_from_req (request_str, h_req);
+    err_info = HttpRequest::parse_headers_from_req (request_str, h_req);
     if (err_info.errored)
         return err_info;
 
     HttpRequest::log_request (h_req, ca_info.ip);
+
+    err_info = HttpRequest::parse_body_from_req (h_req);
+    if (err_info.errored)
+        return err_info;
+
     return { false, "" };
 }
 

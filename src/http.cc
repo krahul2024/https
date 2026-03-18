@@ -22,11 +22,10 @@ error_status_info HttpRequest::parse_method_path_version_from_req (std::string& 
 // -> status, error_msg
 error_status_info HttpRequest::parse_headers_from_req (std::string& req_str, HttpRequest& h) {
     std::string headers_str = util_methods::consume_str_till_token (req_str, DOUBLE_CRLF);
+    h.body                  = req_str;
 
-    if (headers_str.empty()) {
-        h.body = req_str;
+    if (headers_str.empty())
         return { false, "" };
-    }
 
     while (!headers_str.empty()) {
         std::string header_line = util_methods::consume_str_till_token (headers_str, CRLF);
@@ -51,15 +50,14 @@ error_status_info HttpRequest::parse_body_from_req (HttpRequest& h) {
 
     const std::string& content_type = HttpRequest::get_req_header (h, http_headers::content_type);
     if (content_type.empty())
-        return { true, "header missing: content type" };
-
+        return { true, "error; missing header \"content-type\"" };
 
     return { false, "" };
 }
 
 const std::string HttpRequest::get_req_header (HttpRequest& h, const std::string& header_str) {
-    auto it = h.headers.at (header_str);
-    return (it.empty()? "" : it);
+    auto exists = h.headers.find (header_str);
+    return (exists != h.headers.end()? h.headers.at (header_str): "");
 }
 
 void HttpRequest::log_req_line (const HttpRequest& h) {
